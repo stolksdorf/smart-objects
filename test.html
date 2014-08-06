@@ -1,16 +1,50 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-	<script type="text/javascript" src="../~libs/underscore.js"></script>
-	<script type="text/javascript" src="strict-objects.js"></script>
+
+	<script type="text/javascript" src='http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js'></script>
+	<script>require = function(){ return _}; module = {};</script>
+	<script type="text/javascript" src="smart-objects.js"></script>
 
 
 </head>
 <body>
 
 
+
+
 	<script>
 
+
+
+		var UserModel = smartObject({
+			props : {
+				name : 'string',
+				age : 'number',
+				posts : 'array',
+				customData : 'object',
+				userType : {
+					tier : 'string',
+					isAwesome : ['boolean', false]
+				}
+			},
+			methods : {
+				hasManyPosts : function(){
+					return this.posts.length > 10;
+				},
+				toggleAwesome : function(){
+					this.userType.isAwesome = !this.userType.isAwesome;
+				}
+			},
+			statics : {
+				getRecentUsers : function(){
+					console.log('TEST', this);
+					return this.create({name : 'COOL'});
+				}
+			}
+		});
+
+		var loggedInUser = UserModel.create({name : 'Scott'});
 
 
 

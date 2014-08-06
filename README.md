@@ -1,9 +1,9 @@
-strict-objects
+smart-objects
 =============
 
-Stricts Objects allow you to create a blueprint of properties for an object. These properties can then be validated and have events fired when these properties are modified. Heavy influenced by the [Ampersand State](http://ampersandjs.com/docs#ampersand-state) project. Strict Objects use [definable properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty) so you don't have to bother with `.set()`, simple assignment will just work.
+Smarts Objects allow you to create a blueprint of properties for an object. These properties can then be validated and have events fired when these properties are modified. Heavy influenced by the [Ampersand State](http://ampersandjs.com/docs#ampersand-state) project. Smart Objects use [definable properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty) so you don't have to bother with `.set()`, simple assignment will just work.
 
-In short, use Strict Objects if:
+In short, use Smart Objects if:
 
 * You know exactly the structure of your object
 * Having default values on your object is useful
@@ -11,11 +11,11 @@ In short, use Strict Objects if:
 * You want to fire events whenever a property is modified
 * You want to add additional properties/functions on an object that aren't serialized
 
-### Creating a Strict-Object
+### Creating a Smart-Object
 
 Let's create a simple user model
 
-	var UserModel = strictObj({
+	var UserModel = smartObj({
 		props : {
 			name : 'string',
 			age : 'number',
@@ -30,7 +30,7 @@ Let's create a simple user model
 	});
 
 
-Each strict object should have a `props` object outlining the properties you care about, along with their type. On creation, those properties are defaulted to that type's default value. So in our example,`loggedInUser.posts` will actually be initialized as an empty array. You get and set these properties just as you would normally, no worrying about `.set()` or `.get()` functions.
+Each smart object should have a `props` object outlining the properties you care about, along with their type. On creation, those properties are defaulted to that type's default value. So in our example,`loggedInUser.posts` will actually be initialized as an empty array. You get and set these properties just as you would normally, no worrying about `.set()` or `.get()` functions.
 
 	var loggedInUser = UserModel.create({ name : 'Bromley'});
 
@@ -41,7 +41,7 @@ Each strict object should have a `props` object outlining the properties you car
 
 ### Events
 
-Strict Objects fire change events whenever one of it's tracking properties is modified. `change` is always fired whenever anything changes. To listen to a specific property only, use the syntax `'change:propName'`.
+Smart Objects fire change events whenever one of it's tracking properties is modified. `change` is always fired whenever anything changes. To listen to a specific property only, use the syntax `'change:propName'`.
 
 	loggedInUser.on('change', function(propName){
 		console.log(propName + 'has changed!');
@@ -70,7 +70,7 @@ If you aren't sure what type the property will be, but still want to listen to e
 
 The property type can also be defined as an array, where the first parameter is the property's type and the second is it's custom default value.
 
-	var UserModel = strictObj({
+	var UserModel = smartObj({
 		props : {
 			name : ['string', 'New User']
 			age : 'number',
@@ -100,11 +100,11 @@ The property type can also be defined as an array, where the first parameter is 
 	}
 
 
-### Functions
+### Methods
 
-We can also define functions we want to be added to each strict object along with the `props`.
+We can also define functions we want to be added to each smart object along with the `props`.
 
-	var UserModel = strictObj({
+	var UserModel = smartObj({
 		props : {
 			name : 'string',
 			age : 'number',
@@ -115,11 +115,13 @@ We can also define functions we want to be added to each strict object along wit
 				isAwesome : ['boolean', false]
 			}
 		},
-		hasManyPosts : function(){
-			return this.posts.length > 10;
-		},
-		toggleAwesome : function(){
-			this.userType.isAwesome = !this.userType.isAwesome;
+		methods : {
+			hasManyPosts : function(){
+				return this.posts.length > 10;
+			},
+			toggleAwesome : function(){
+				this.userType.isAwesome = !this.userType.isAwesome;
+			}
 		}
 	});
 
@@ -127,20 +129,50 @@ We can also define functions we want to be added to each strict object along wit
 
 	loggedInUser.hasManyPosts(); //false
 
+### Statics
+
+Static functions are added to the smart-object definition, but not the instance. This is useful for when you have a function that deals with your smart-objects, not a specific instance
+
+
+	var UserModel = smartObj({
+		props : {
+			name : 'string',
+			age : 'number',
+			posts : 'array',
+			customData : 'object',
+			userType : {
+				tier : 'string',
+				isAwesome : ['boolean', false]
+			}
+		},
+		methods : {
+			hasManyPosts : function(){
+				return this.posts.length > 10;
+			},
+			toggleAwesome : function(){
+				this.userType.isAwesome = !this.userType.isAwesome;
+			}
+		},
+		statics : {
+			getRecentUsers : function(){
+				//...
+			}
+		}
+	});
 
 
 ### Built-in Goodies
 
-Each Strict Object comes with a few built-in goodies
+Each Smart Object comes with a few built-in goodies
 
-**set** &nbsp; `strict_obj.set([object])` <br>
-Set allows you to massively update your object's properties. Useful for initially defining a strict object with defaults and triggers waiting on response from an API, then setting that response to your object. This will do a validation check on each property as well.
+**set** &nbsp; `smart_obj.set([object])` <br>
+Set allows you to massively update your object's properties. Useful for initially defining a smart object with defaults and triggers waiting on response from an API, then setting that response to your object. This will do a validation check on each property as well.
 
-**toJSON** &nbsp; `strict_obj.toJSON()` <br>
-Returns a JSON version of your strict object without any of the getters or setters, or any additional properties you may have added. Perfect for shipping data off to an API.
+**toJSON** &nbsp; `smart_obj.toJSON()` <br>
+Returns a JSON version of your smart object without any of the getters, setters, or any additional properties you may have added. Perfect for shipping data off to an API.
 
-**_props** &nbsp; `strict_obj._props` <br>
-The strict object's properties are actually stored at `_props`. If you want to be sneaky and silently change some values without firing change events, you can do it here.
+**_props** &nbsp; `smart_obj._props` <br>
+The smart object's properties are actually stored at `_props`. If you want to be sneaky and change some values without firing change events or not have it validated, you can do it here.
 
 	loggedInUser._props.age = 21;
 	loggedInUser.age; //it's 21! and not a single event was fired.

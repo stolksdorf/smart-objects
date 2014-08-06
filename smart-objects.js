@@ -24,11 +24,10 @@ var validate = function(name, type, val){
 	}
 };
 
-var smartObj = function(funcs){
-	var propRecipes = funcs.props;
-	delete funcs.props;
+var smartObject = function(blueprint){
+	blueprint.statics = blueprint.statics || {};
 
-	return {
+	return _.extend(blueprint.statics , {
 		create : function(startingProps){
 			var obj = Object.create(_.extend({
 				_props : {},
@@ -53,9 +52,10 @@ var smartObj = function(funcs){
 					_.extend(this, obj);
 					return this;
 				},
-			}, funcs));
-			return this.buildProps(obj, obj, obj._props, propRecipes, startingProps);
+			}, blueprint.methods));
+			return this.buildProps(obj, obj, obj._props, blueprint.props, startingProps);
 		},
+
 
 		buildProps : function(rootObj, obj, _props, recipes, startingProps){
 			startingProps = startingProps || {};
@@ -116,7 +116,7 @@ var smartObj = function(funcs){
 
 			return obj;
 		}
-	}
+	});
 };
 
-module.exports = smartObj;
+module.exports = smartObject;
