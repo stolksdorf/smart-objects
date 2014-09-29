@@ -33,7 +33,7 @@ var isDefinitionObj = function(obj){
 };
 
 
-buildProps = function(rootObj, obj, _props, recipes, startingProps){
+buildProps = function(rootObj, obj, _props, recipes, startingProps, _v){
 	startingProps = startingProps || {};
 	_.each(recipes, function(propVal, propName){
 		//Default to 'any' type
@@ -49,7 +49,8 @@ buildProps = function(rootObj, obj, _props, recipes, startingProps){
 			//Check to see if there's a nested prop definition
 			var recipe = propVal;
 			_props[propName] = {};
-			var subsmartObject = buildProps(rootObj, {}, _props[propName], recipe, startingProps[propName]);
+			_v[propName] = {};
+			var subsmartObject = buildProps(rootObj, {}, _props[propName], recipe, startingProps[propName], _v[propName]);
 
 			//Define a special property if it's a nested prop definition
 			Object.defineProperty(obj, propName, {
@@ -82,12 +83,15 @@ buildProps = function(rootObj, obj, _props, recipes, startingProps){
 
 		//set the default value to the passed in one, custom default, or type's default. In that order
 		obj[propName] = _.reduce([defaults[definition.type](), definition.default, startingProps[propName]], function(result, val){
-			if(_.isFunction(val)){
-				val = val.call(rootObj);
-			}
+			if(_.isFunction(val)) val = val.call(rootObj);
 			if(!_.isUndefined(val)) return val;
 			return result;
 		});
+
+		_v[propName] = function(){
+			if(_.isFunction(definition.validate)) return definition.validate.call(rootObj, _props[propName]);
+			return true;
+		}
 	});
 
 	return obj;
@@ -98,10 +102,13 @@ buildProps = function(rootObj, obj, _props, recipes, startingProps){
 var smartObject = function(blueprint){
 	blueprint.statics = blueprint.statics || {};
 
+	var _v = {};
+
 	return _.extend(blueprint.statics , {
 		create : function(startingProps){
 			var obj = Object.create(_.extend({
 				_props : {},
+				_v : {},
 				_events : [],
 				toJSON : function(){
 					return this._props;
@@ -123,9 +130,30 @@ var smartObject = function(blueprint){
 					_.extend(this, obj);
 					return this;
 				},
+			}, {
+				validate : function(){
+					var result = {};
+
+					var check = function(obj){
+						var result = {};
+						_.each(obj, function(v_fn, propName){
+							var r;
+							if(_.isFunction(v_fn)){ r = v_fn(); }
+							else if(_.isObject(v_fn)){ r = check(v_fn); }
+
+							if(r === false){ result[propName] = 'Invalid yo'; }
+							else if(_.isString(r)){ result[propName] = r; }
+							else if(_.isObject(r) && !_.isEmpty(r)){ result[propName] = r; }
+						});
+						return _.isEmpty(result) || result;
+					}
+
+					return check(this._v);
+				}
 			}, blueprint.methods));
-			return buildProps(obj, obj, obj._props, blueprint.props, startingProps);
-		}
+			return buildProps(obj, obj, obj._props, blueprint.props, startingProps, obj._v);
+		},
+
 
 	});
 };

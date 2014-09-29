@@ -18,26 +18,31 @@
 
 		var UserModel = smartObject({
 			props : {
-			  	name : 'string',
-			  	age : {
-			  		type : 'number',
-			  		default : Date.now
-			  	},
-			/*	posts : {
-			  		type     : 'array',
-			  		required : true,
-			  		validate : function(val){
-			  			return val.length > 3;
-			  		}
-			  	},*/
-			  	customData : 'object',
-			  	userType : {
-			  		tier : 'string',
-			  		isAwesome : {
-			  			type : 'boolean',
-			  			default : false
-			  		}
-			  	}
+				name : 'string',
+				age : {
+					type : 'number',
+					validate : function(val){
+						return val == 6;
+					}
+				},
+				posts : {
+					type     : 'array',
+					required : true,
+					validate : function(val){
+						if(val.length < 3) return 'Too few Posts';
+					}
+				},
+				customData : 'object',
+				userType : {
+					tier : 'string',
+					isAwesome : {
+						type : 'boolean',
+						default : false,
+						validate : function(v){
+							return v;
+						}
+					}
+				}
 			},
 			methods : {
 				hasManyPosts : function(){
