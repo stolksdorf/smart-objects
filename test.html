@@ -3,7 +3,6 @@
 <head>
 
 	<script type="text/javascript" src='http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js'></script>
-	<script>require = function(){ return _}; module = {};</script>
 	<script type="text/javascript" src="smart-objects.js"></script>
 
 
@@ -19,14 +18,29 @@
 
 		var UserModel = smartObject({
 			props : {
-				name : 'string',
-				age : 'number',
-				posts : 'array',
-				customData : 'object',
-				userType : {
-					tier : 'string',
-					isAwesome : ['boolean', false]
-				}
+			  	name : 'string',
+			  	age : 'number',
+			/*	posts : {
+			  		type     : 'array',
+			  		required : true,
+			  		validate : function(val){
+			  			return val.length > 3;
+			  		}
+			  	},*/
+			  	customData : 'object',
+			  	userType : {
+			  		tier : 'string',
+			  		isAwesome : {
+			  			type : 'boolean',
+			  			default : false
+			  		}
+			  	},
+			  	userType : {
+			  		tier : 'string',
+			  		isAwesome : {
+			  			type : 'array',
+			  		}
+			  	}
 			},
 			methods : {
 				hasManyPosts : function(){
@@ -37,7 +51,7 @@
 				}
 			},
 			statics : {
-				getRecentUsers : function(){
+				createCoolUser : function(){
 					console.log('TEST', this);
 					return this.create({name : 'COOL'});
 				}
