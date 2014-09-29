@@ -8,6 +8,7 @@ In short, use Smart Objects if:
 * You know exactly the structure of your object
 * Having default values on your object is useful
 * You want type checking on object properties
+* You have validation on object properties
 * You want to fire events whenever a property is modified
 * You want to add additional properties/functions on an object that aren't serialized
 
@@ -19,11 +20,23 @@ Let's create a simple user model
 		props : {
 			name : 'string',
 			age : 'number',
-			posts : 'array',
+			posts : {
+				type : 'array',
+				validate : function(val){
+					return val.length > 0;
+				}
+			},
 			customData : 'object',
 			userType : {
 				tier : 'string',
-				isAwesome : ['boolean', false]
+				isAwesome : {
+					type : 'boolean',
+					default : false
+				}
+			},
+			created_on : {
+				type : 'number',
+				default : Date.now
 			},
 			additionalData : 'any'
 		}
@@ -34,7 +47,7 @@ Each smart object should have a `props` object outlining the properties you care
 
 	var loggedInUser = UserModel.create({ name : 'Bromley'});
 
-	if(loggedInUser.userType.isAwesome){
+	if(!loggedInUser.userType.isAwesome){
 		loggedInUser.additionalData = 'Not cool bro';
 	}
 
@@ -52,9 +65,9 @@ Smart Objects fire change events whenever one of it's tracking properties is mod
 	loggedInUser.age = 21; //Both events will fire
 
 
-### Validation
+### Type Checking
 
-Property types are used for validation whenever a property is set.
+Property types are used for type checking whenever a property is set.
 
 	loggedInUser.name = 23;
 	//Type Error: Property 'name' only supports string
@@ -68,19 +81,34 @@ If you aren't sure what type the property will be, but still want to listen to e
 
 ### Default Values
 
-The property type can also be defined as an array, where the first parameter is the property's type and the second is it's custom default value.
+The property type can also be as an object containing a `default` field. This field can be a function, which will be called at creation time.
 
 	var UserModel = smartObj({
 		props : {
-			name : ['string', 'New User']
+			name : {
+				type : 'string',
+				default : 'New User'
+			},
 			age : 'number',
 			posts : 'array',
-			customData : ['object', {junk : true}]
-			userType : {
-				tier : ['string', 'bronze']
-				isAwesome : ['boolean', false]
+			customData : {
+				type : 'object',
+				default : {junk : true}
 			},
-			additionalData : ['any', {}]
+			userType : {
+				tier : {
+					type : 'string',
+					default : 'bronze'
+				},
+				isAwesome : {
+					type : 'boolean',
+					default : false
+				},
+			},
+			additionalData : {
+				type : 'any',
+				default : {}
+			}
 		}
 	});
 
@@ -99,6 +127,44 @@ The property type can also be defined as an array, where the first parameter is 
 		additionalData : {}
 	}
 
+### Validation
+
+Each smart object will have access to a `.validate()` function which will either return `true` or an object mapped with error messages. Each prop can have it's own validation function defined on the definition object as `validate`. The value of the prop will be passed in as a parameter, and the function context will be the smart object itself. To mark a field as invalid, either return `false` or a custom error string.
+
+	var UserModel = smartObj({
+		props : {
+			name : {
+				type : 'string',
+				validate : function(name){
+					return !!name
+				}
+			},
+			age : 'number',
+			posts : 'array',
+			customData : 'object',
+			userType : {
+				tier : 'string',
+				isAwesome : {
+					type : 'boolean',
+					default : false,
+					validate : function(val){
+						if(!val) return 'Must be Awesome'
+					}
+			}
+		}
+	});
+
+	var loggedInUser = UserModel.create({ name : 'Bromley'});
+
+	loggedInUser.validate();
+	//Returns
+	{
+		name : 'Invalid',
+		userType : {
+			isAwesome : 'Must be Awesome'
+		}
+	}
+
 
 ### Methods
 
@@ -112,7 +178,7 @@ We can also define functions we want to be added to each smart object along with
 			customData : 'object',
 			userType : {
 				tier : 'string',
-				isAwesome : ['boolean', false]
+				isAwesome : 'boolean'
 			}
 		},
 		methods : {
@@ -131,7 +197,7 @@ We can also define functions we want to be added to each smart object along with
 
 ### Statics
 
-Static functions are added to the smart-object definition, but not the instance. This is useful for when you have a function that deals with your smart-objects, not a specific instance
+Static functions are added to the smart-object definition, but not the instance. This is useful for when you have a function that deals with your smart-objects, not a specific instance, or we want a function that will create many instances given criteria, such as `.fetchAllActiveUsers()`.
 
 
 	var UserModel = smartObj({
