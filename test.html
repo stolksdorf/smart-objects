@@ -19,7 +19,10 @@
 		var UserModel = smartObject({
 			props : {
 			  	name : 'string',
-			  	age : 'number',
+			  	age : {
+			  		type : 'number',
+			  		default : Date.now
+			  	},
 			/*	posts : {
 			  		type     : 'array',
 			  		required : true,
@@ -33,12 +36,6 @@
 			  		isAwesome : {
 			  			type : 'boolean',
 			  			default : false
-			  		}
-			  	},
-			  	userType : {
-			  		tier : 'string',
-			  		isAwesome : {
-			  			type : 'array',
 			  		}
 			  	}
 			},

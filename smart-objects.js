@@ -18,27 +18,36 @@ var typeValidations = {
 	'boolean': _.isBoolean
 };
 
-var validate = function(name, type, val){
+var typeCheck = function(name, type, val){
 	if(!typeValidations[type](val) && !_.isUndefined(val)){
 		throw new TypeError("Property '" + name + "' only supports " + type);
 	}
 };
 
+//Every property on the object has to belong to the above list. And 'type' is a string.
+var isDefinitionObj = function(obj){
+	var keywords = ['type', 'default', 'required', 'validate'];
+	return _.every(obj, function(val, key){
+		return _.contains(keywords, key)
+	}) && _.isString(obj.type);
+};
+
 
 buildProps = function(rootObj, obj, _props, recipes, startingProps){
 	startingProps = startingProps || {};
-	_.each(recipes, function(propType, propName){
-		//Check for a custom default value
-		var def;
+	_.each(recipes, function(propVal, propName){
+		//Default to 'any' type
+		var definition = {
+			type : 'any'
+		};
 
-		if(_.isArray(propType)){
-			def = propType[1];
-			propType = propType[0];
-		}
-
-		//Check to see if there's a nested prop definition
-		if(_.isObject(propType)){
-			var recipe = propType;
+		if(_.isString(propVal)){
+			definition.type = propVal;
+		}else if(isDefinitionObj(propVal)){
+			definition = propVal;
+		}else if(_.isObject(propVal)){
+			//Check to see if there's a nested prop definition
+			var recipe = propVal;
 			_props[propName] = {};
 			var subsmartObject = buildProps(rootObj, {}, _props[propName], recipe, startingProps[propName]);
 
@@ -49,25 +58,20 @@ buildProps = function(rootObj, obj, _props, recipes, startingProps){
 					return subsmartObject
 				},
 				set : function(val){
-					validate(propName, 'object', val);
+					typeCheck(propName, 'object', val);
 					_.extend(subsmartObject, val);
 				}
 			});
 			return;
 		}
 
-		//Default to 'any' type
-		if(!propType) propType = 'any';
-		if(!_.has(defaults, propType)){
-			throw new TypeError("Property type not supported: " + propType);
-		}
 		Object.defineProperty(obj, propName, {
 			enumerable : true,
 			get : function(){
 				return _props[propName];
 			},
 			set : function(val){
-				validate(propName, propType, val);
+				typeCheck(propName, definition.type, val);
 				if(_props[propName] !== val){
 					_props[propName] = val;
 					rootObj.trigger('change', propName);
@@ -77,8 +81,12 @@ buildProps = function(rootObj, obj, _props, recipes, startingProps){
 		});
 
 		//set the default value to the passed in one, custom default, or type's default. In that order
-		obj[propName] = _.find([startingProps[propName], def, defaults[propType]()], function(val){
-			return !_.isUndefined(val);
+		obj[propName] = _.reduce([defaults[definition.type](), definition.default, startingProps[propName]], function(result, val){
+			if(_.isFunction(val)){
+				val = val.call(rootObj);
+			}
+			if(!_.isUndefined(val)) return val;
+			return result;
 		});
 	});
 
