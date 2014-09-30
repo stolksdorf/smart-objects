@@ -68,6 +68,9 @@ var _ = (typeof require == 'function' && require('underscore')) || _;
 				return;
 			}
 
+			//check prop type is valid
+			if(!_.contains(_.keys(typeValidations), definition.type)) throw "smart-objects : '" + definition.type + "' invalid type.";
+
 			Object.defineProperty(obj, propName, {
 				enumerable : true,
 				get : function(){
