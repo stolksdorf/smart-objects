@@ -1,4 +1,4 @@
-var _ = (typeof require == 'function' && require('underscore')) || _;
+var _ = (typeof require == 'function' && require('lodash')) || _;
 
 (function(){
 
