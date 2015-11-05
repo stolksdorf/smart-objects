@@ -1,4 +1,4 @@
-var _ = (typeof require == 'function' && require('underscore')) || _;
+var _ = (typeof require == 'function' && require('lodash')) || _;
 
 (function(){
 
@@ -35,7 +35,7 @@ var _ = (typeof require == 'function' && require('underscore')) || _;
 	};
 
 
-	buildProps = function(rootObj, obj, _props, recipes, startingProps, _v){
+	var buildProps = function(rootObj, obj, _props, recipes, startingProps, _v){
 		startingProps = startingProps || {};
 		_.each(recipes, function(propVal, propName){
 			//Default to 'any' type
@@ -104,7 +104,7 @@ var _ = (typeof require == 'function' && require('underscore')) || _;
 
 
 
-	smartObject = function(blueprint){
+	var smartObject = function(blueprint){
 		blueprint.statics = blueprint.statics || {};
 
 		var _v = {};
