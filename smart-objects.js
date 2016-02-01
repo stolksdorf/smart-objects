@@ -30,7 +30,7 @@ var _ = (typeof require == 'function' && require('lodash')) || _;
 	var isDefinitionObj = function(obj){
 		var keywords = ['type', 'default', 'required', 'validate'];
 		return _.every(obj, function(val, key){
-			return _.contains(keywords, key)
+			return _.includes(keywords, key)
 		}) && _.isString(obj.type);
 	};
 
@@ -69,7 +69,7 @@ var _ = (typeof require == 'function' && require('lodash')) || _;
 			}
 
 			//check prop type is valid
-			if(!_.contains(_.keys(typeValidations), definition.type)) throw "smart-objects : '" + definition.type + "' invalid type.";
+			if(!_.includes(_.keys(typeValidations), definition.type)) throw "smart-objects : '" + definition.type + "' invalid type.";
 
 			Object.defineProperty(obj, propName, {
 				enumerable : true,
